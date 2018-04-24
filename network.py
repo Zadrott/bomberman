@@ -4,6 +4,7 @@
 from model import *
 import socket
 import pickle
+import threading
 
 ################################################################################
 #                          NETWORK SERVER CONTROLLER                           #
@@ -18,15 +19,23 @@ class NetworkServerController:
         self.socket_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket_server.bind(('', 7777))
         self.socket_server.listen(1)
+        thread = threading.Thread(None, self.connexion, None, ()).start()
 
-    def gestion_clients():
+        
+    def connexion(self):
+        while (true) :
+            socket_accepte, (adr, port) = self.socket_server.accept()
+            threading.Thread(None, self.gestion_clients, None, (socket_accepte, adr)).start()
+
+        
+    def gestion_clients(self, socket_client, adr):
         while(true):
             serv_model = pickle.dumps([self.model.map.height, self.model.map.width, self.model.map.array] )
             #faire threads pour les clients
             socket_server.sendall(serv_model)
         
    
-
+    
 
     # time event
     def tick(self, dt):
