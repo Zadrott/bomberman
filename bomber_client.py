@@ -29,10 +29,9 @@ nickname = sys.argv[3]
 pygame.display.init()
 pygame.font.init()
 clock = pygame.time.Clock()
-model = Model() #get server's model
-model.load_map(DEFAULT_MAP) #get server's map ?
-view = GraphicView(model, nickname)
+model = Model()
 client = NetworkClientController(model, host, port, nickname)
+view = GraphicView(model, nickname)
 kb = KeyboardController(client)
 
 # main loop

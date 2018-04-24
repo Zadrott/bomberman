@@ -3,6 +3,7 @@
 
 from model import *
 import socket
+import pickle
 
 ################################################################################
 #                          NETWORK SERVER CONTROLLER                           #
@@ -12,15 +13,17 @@ class NetworkServerController:
     def __init__(self, model, port):
         self.model = model
         self.port = port
+        #init socket
+        self.socket_server = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
+        self.socket_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket_server.bind(('', 7777))
+        self.socket_server.listen(1)
 
-        #envoi map & model
-        send_socket_server = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
-        send_socket_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        send_socket_server.bind(('', 7777))
-
-        print(model)
-        serv_model = model.encode
-        send_socket_server.send(serv_model)
+    def gestion_clients():
+        while(true):
+            serv_model = pickle.dumps([self.model.map.height, self.model.map.width, self.model.map.array] )
+            #faire threads pour les clients
+            socket_server.sendall(serv_model)
         
    
 
@@ -39,27 +42,19 @@ class NetworkClientController:
     def __init__(self, model, host, port, nickname):
         self.nickname = nickname
         self.host = host
-        self.port = port
-
+        self.port = port 
+        # init socket
+        self.socket_client = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
+        self.socket_client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket_client.bind(('', 7777))
+        self.socket_client.listen(1)
+        # load map
+        self.socket_client(send.
+        pickle.loads()
         
-        #model
-        self.receive_socket_client = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
-        self.receive_socket_client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.receive_socket_client.bind(('', 7777))
-        self.receive_socket_client.listen(0)
-        while True:
-            sclient, addr = self.receive_socket_client.accept()
-            print('Connected by', addr)
-            while True:
-                server_model = sclient.recv(1500)
-                print(server_model)
-        self.model = server_model.decode()
         
 
-##        #map
-##        self.receive_socket_client.send("map".encode)
-##        map_to_load = (self.receive_socket_client.recv(1500).decode())
-##        self.model.load_map(self.map_to_load)
+
 
         #fruits-> boucle for car plusieurs
 
