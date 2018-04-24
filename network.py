@@ -55,11 +55,14 @@ class NetworkClientController:
         # init socket
         self.socket_client = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
         self.socket_client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket_client.bind(('', 7777))
+        self.socket_client.bind(('', self.port))
         self.socket_client.listen(1)
         # load map
-        self.socket_client(send.
-        pickle.loads()
+        self.socket_client.send(b'map')
+        self.map = pickle.loads(self.socket_client.recv(1500))
+        self.model.map.height = self.map[0]
+        self.model.map.width = self.map[1]
+        self.model.map.array = self.map[2]
         
         
 
