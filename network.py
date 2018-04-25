@@ -34,12 +34,13 @@ class NetworkServerController:
             if(socket_client.recv(1500).decode() == "map"):
                 serv_map = pickle.dumps([self.model.map.height, self.model.map.width, self.model.map.array] )
                 socket_client.sendall(serv_map)
-                #socket_client.recv(1500)
-                test = ["end"]
-                for i in range(len(self.model.fruits)):
-                    serv_fruits =  pickle.dumps([self.model.fruits[i].kind, self.model.fruits[i].pos])
-                    socket_client.sendall(serv_fruits)
-                socket_client.sendall(pickle.dumps(test))
+            #reception nickname
+            #socket_client.recv(1500)
+                
+            #def send_model():                        #à faire à chaque changement
+            serv_model = pickle.dumps([self.model.characters, self.model.fruits, self.model.bombs])
+            socket_client.sendall(serv_model)
+
    
     
 
@@ -69,16 +70,17 @@ class NetworkClientController:
         self.model.map.width = self.map[1]
         self.model.map.array = self.map[2]
         
-        # tests
+#### #################  en cours  ################################################
+        # envoi nickmame
         #self.socket_client.send(nickname.encode())
-        self.receive = pickle.loads(self.socket_client.recv(1500))
-        while(self.receive != ["end"]): #forcement une liste ?
-            print(self.receive)
-            self.model.fruits.append(Fruit(self.receive[0], self.map, self.receive[1]))
-            self.receive = pickle.loads(self.socket_client.recv(1500))
-              
-    #load character
-    #load fruits-> boucle for car plusieurs
+
+        
+    #def receive_model(self):
+        self.model.characters, self.model.fruits, self.model.bombs = pickle.loads(self.socket_client.recv(1500))
+##        received_model = pickle.loads(self.socket_client.recv(1500))
+##        self.model.characters = self.received_model[0]
+##        self.model.fruits = self.received_model[1]
+##        self.model.bombs = self.received_model[2]
 
         
     # keyboard events
