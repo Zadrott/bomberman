@@ -32,9 +32,14 @@ class NetworkServerController:
     def gestion_clients(self, socket_client, adr):
         while(True):
             if(socket_client.recv(1500).decode() == "map"):
-                serv_model = pickle.dumps([self.model.map.height, self.model.map.width, self.model.map.array] )
-                socket_client.sendall(serv_model)
-        
+                serv_map = pickle.dumps([self.model.map.height, self.model.map.width, self.model.map.array] )
+                socket_client.sendall(serv_map)
+                #socket_client.recv(1500)
+                test = ["end"]
+                for i in range(len(self.model.fruits)):
+                    serv_fruits =  pickle.dumps([self.model.fruits[i].kind, self.model.fruits[i].pos])
+                    socket_client.sendall(serv_fruits)
+                socket_client.sendall(pickle.dumps(test))
    
     
 
@@ -57,17 +62,23 @@ class NetworkClientController:
         self.socket_client = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
         self.socket_client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket_client.connect((host, port))
+        # init map
         self.socket_client.send("map".encode())
         self.map = pickle.loads(self.socket_client.recv(1500))
         self.model.map.height = self.map[0]
         self.model.map.width = self.map[1]
         self.model.map.array = self.map[2]
         
+        # tests
+        #self.socket_client.send(nickname.encode())
+        self.receive = pickle.loads(self.socket_client.recv(1500))
+        while(self.receive != ["end"]): #forcement une liste ?
+            print(self.receive)
+            self.model.fruits.append(Fruit(self.receive[0], self.map, self.receive[1]))
+            self.receive = pickle.loads(self.socket_client.recv(1500))
+              
     #load character
-
-
     #load fruits-> boucle for car plusieurs
-
 
         
     # keyboard events
