@@ -1,5 +1,5 @@
 # -*- coding: Utf-8 -*
-# Author: aurelien.esnard@u-bordeaux.fr
+# Author: Ilo et Antho
 
 from model import *
 import socket
@@ -20,6 +20,7 @@ class NetworkServerController:
         self.socket_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket_server.bind(('', self.port))
         self.socket_server.listen(1)
+        self.liste_clients = []
         threading.Thread(None, self.connexion, None, ()).start()
 
         
@@ -27,26 +28,29 @@ class NetworkServerController:
         #main thread create a thread per client
         while (True) :
             socket_accepte, adr = self.socket_server.accept()
+            self.liste_clients.append(socket_accepte)
             threading.Thread(None, self.gestion_clients, None, (socket_accepte, adr)).start()
+            #self.send_model()
 
     def gestion_clients(self, socket_client, adr):
         while(True):
             if(socket_client.recv(1500).decode() == "map"):
                 serv_map = pickle.dumps([self.model.map.height, self.model.map.width, self.model.map.array] )
                 socket_client.sendall(serv_map)
-            #reception nickname
-            #socket_client.recv(1500)
                 
-            #def send_model():                        #à faire à chaque changement
+    def send_model(self):                 #à faire à chaque changement
+        for client in self.liste_clients:
+            #socket_client = self.liste_clients[client][0]
             serv_model = pickle.dumps([self.model.characters, self.model.fruits, self.model.bombs])
-            socket_client.sendall(serv_model)
+            client.sendall(serv_model)
 
    
     
 
     # time event
     def tick(self, dt):
-            return True
+        self.send_model()
+        return True
 
 ################################################################################
 #                          NETWORK CLIENT CONTROLLER                           #
@@ -77,10 +81,6 @@ class NetworkClientController:
         
     #def receive_model(self):
         self.model.characters, self.model.fruits, self.model.bombs = pickle.loads(self.socket_client.recv(1500))
-##        received_model = pickle.loads(self.socket_client.recv(1500))
-##        self.model.characters = self.received_model[0]
-##        self.model.fruits = self.received_model[1]
-##        self.model.bombs = self.received_model[2]
 
         
     # keyboard events
@@ -102,4 +102,4 @@ class NetworkClientController:
     # time event
 
     def tick(self, dt):
-            return True
+        return True
