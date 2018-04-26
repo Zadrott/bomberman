@@ -37,11 +37,14 @@ class NetworkServerController:
             if(socket_client.recv(1500).decode() == "map"):
                 serv_map = pickle.dumps([self.model.map.height, self.model.map.width, self.model.map.array] )
                 socket_client.sendall(serv_map)
+            if(socket_client.recv(1500).decode() == "nickname"):
+                self.model.add_character(nickname)
                 
     def send_model(self):                 #à faire à chaque changement
         for client in self.liste_clients:
             serv_model = pickle.dumps([self.model.characters, self.model.fruits, self.model.bombs])
             client.sendall(serv_model)
+            
 
    
     
@@ -72,12 +75,13 @@ class NetworkClientController:
         self.model.map.height = self.map[0]
         self.model.map.width = self.map[1]
         self.model.map.array = self.map[2]
-        self.receive_model()
-#### #################  en cours  ################################################
-        # envoi nickmame
-        #self.socket_client.send(nickname.encode())
-
         
+        #init character
+        nickname = "nickname " + self.nickname + "|"
+        self.socket_client.send(self.nickname.encode())
+        
+        self.receive_model()
+
     def receive_model(self):
         self.model.characters, self.model.fruits, self.model.bombs = pickle.loads(self.socket_client.recv(1500))
 
@@ -101,4 +105,5 @@ class NetworkClientController:
     # time event
 
     def tick(self, dt):
+        self.receive_model()
         return True
