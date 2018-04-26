@@ -40,7 +40,6 @@ class NetworkServerController:
                 
     def send_model(self):                 #à faire à chaque changement
         for client in self.liste_clients:
-            #socket_client = self.liste_clients[client][0]
             serv_model = pickle.dumps([self.model.characters, self.model.fruits, self.model.bombs])
             client.sendall(serv_model)
 
@@ -73,13 +72,13 @@ class NetworkClientController:
         self.model.map.height = self.map[0]
         self.model.map.width = self.map[1]
         self.model.map.array = self.map[2]
-        
+        self.receive_model()
 #### #################  en cours  ################################################
         # envoi nickmame
         #self.socket_client.send(nickname.encode())
 
         
-    #def receive_model(self):
+    def receive_model(self):
         self.model.characters, self.model.fruits, self.model.bombs = pickle.loads(self.socket_client.recv(1500))
 
         
