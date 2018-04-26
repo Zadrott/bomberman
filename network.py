@@ -7,9 +7,9 @@ import pickle
 import threading
 import errno
 
-################################################################################
+###########################################
 #                          NETWORK SERVER CONTROLLER                           #
-################################################################################
+###########################################
 
 class NetworkServerController:
     def __init__(self, model, port):
@@ -21,6 +21,7 @@ class NetworkServerController:
         self.socket_server.bind(('', self.port))
         self.socket_server.listen(1)
         self.liste_clients = []
+        self.action = False
         threading.Thread(None, self.connexion, None, ()).start()
 
         
@@ -30,7 +31,6 @@ class NetworkServerController:
             socket_accepte, adr = self.socket_server.accept()
             self.liste_clients.append(socket_accepte)
             threading.Thread(None, self.gestion_clients, None, (socket_accepte, adr)).start()
-            #self.send_model()
 
     def gestion_clients(self, socket_client, adr):
         while(True):
@@ -38,7 +38,9 @@ class NetworkServerController:
                 serv_map = pickle.dumps([self.model.map.height, self.model.map.width, self.model.map.array] )
                 socket_client.sendall(serv_map)
             if(socket_client.recv(1500).decode() == "nickname"):
-                self.model.add_character(nickname)
+                socket_client.send("ack".encode())
+                self.model.add_character(socket_client.recv(1500).decode)
+                self.send_model()
                 
     def send_model(self):                 #à faire à chaque changement
         for client in self.liste_clients:
@@ -51,12 +53,11 @@ class NetworkServerController:
 
     # time event
     def tick(self, dt):
-        self.send_model()
         return True
 
-################################################################################
-#                          NETWORK CLIENT CONTROLLER                           #
-################################################################################
+##########################################
+#                          NETWORK CLIENT CONTROLLER                          #
+##########################################
 
 class NetworkClientController:
 
@@ -71,16 +72,14 @@ class NetworkClientController:
         self.socket_client.connect((host, port))
         # init map
         self.socket_client.send("map".encode())
-        self.map = pickle.loads(self.socket_client.recv(1500))
-        self.model.map.height = self.map[0]
-        self.model.map.width = self.map[1]
-        self.model.map.array = self.map[2]
-        
-        #init character
-        nickname = "nickname " + self.nickname + "|"
+        self.model.map.height, self.model.map.width, self.model.map.array = pickle.loads(self.socket_client.recv(1500))
+        # init character
+        self.socket_client.sendall("nickname".encode())
+        self.socket_client.recv(1500)
         self.socket_client.send(self.nickname.encode())
         
         self.receive_model()
+
 
     def receive_model(self):
         self.model.characters, self.model.fruits, self.model.bombs = pickle.loads(self.socket_client.recv(1500))
@@ -105,5 +104,4 @@ class NetworkClientController:
     # time event
 
     def tick(self, dt):
-        self.receive_model()
         return True
