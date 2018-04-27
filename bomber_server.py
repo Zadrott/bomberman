@@ -44,7 +44,7 @@ while True:
     dt = clock.tick(FPS)
     server.tick(dt)
     model.tick(dt)
-    # view.tick(dt)
+    view.tick(dt)
 
 # quit
 print("Game Over!")

@@ -78,7 +78,7 @@ class NetworkClientController:
         self.socket_client.recv(1500)
         self.socket_client.send(self.nickname.encode())
         
-        self.receive_model()
+       
 
 
     def receive_model(self):
@@ -104,4 +104,5 @@ class NetworkClientController:
     # time event
 
     def tick(self, dt):
+        self.receive_model()
         return True
