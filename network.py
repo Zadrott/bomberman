@@ -34,25 +34,34 @@ class NetworkServerController:
 
     def gestion_clients(self, socket_client, adr):
         while(True):
-            if(socket_client.recv(1500).decode() == "map"):
+            msg = socket_client.recv(1500).decode()
+            if(msg == "map"):
                 serv_map = pickle.dumps([self.model.map.height, self.model.map.width, self.model.map.array] )
                 socket_client.sendall(serv_map)
-            if(socket_client.recv(1500).decode() == "nickname"):
-                socket_client.send("ack".encode())
-                self.model.add_character(socket_client.recv(1500).decode)
-                self.send_model()
+            if(msg == "nickname"):
+                self.model.add_character(pickle.loads(socket_client.recv(1500))[0])
+                self.action = True
+            if(msg == "move"):
+                nickname, direction = pickle.loads(socket_client.recv(1500))
+                self.model.move_character(nickname, int(direction))
+                self.action = True
+            if(msg == "bomb"):
+                nick = pickle.loads(socket_client.recv(1500))[0]
+                self.model.drop_bomb(nick)
+                self.action = True
                 
-    def send_model(self):                 #à faire à chaque changement
+    def send_model(self):
         for client in self.liste_clients:
             serv_model = pickle.dumps([self.model.characters, self.model.fruits, self.model.bombs])
             client.sendall(serv_model)
             
 
-   
-    
-
     # time event
     def tick(self, dt):
+        #Envoi le modèle aux clients dès qu'une action se produit
+        if self.action == True :
+            self.send_model()
+            self.action = False
         return True
 
 ##########################################
@@ -75,14 +84,17 @@ class NetworkClientController:
         self.model.map.height, self.model.map.width, self.model.map.array = pickle.loads(self.socket_client.recv(1500))
         # init character
         self.socket_client.sendall("nickname".encode())
-        self.socket_client.recv(1500)
-        self.socket_client.send(self.nickname.encode())
-        
-       
-
+        self.socket_client.send(pickle.dumps([self.nickname]))
+        self.socket_client.setblocking(False)
 
     def receive_model(self):
-        self.model.characters, self.model.fruits, self.model.bombs = pickle.loads(self.socket_client.recv(1500))
+        try: 
+            self.model.characters, self.model.fruits, self.model.bombs = pickle.loads(self.socket_client.recv(10000))
+        except socket.error as e:
+            if e.args[0] == errno.EWOULDBLOCK:
+                pass
+            else:
+                print("error:", e)
 
         
     # keyboard events
@@ -93,12 +105,14 @@ class NetworkClientController:
 
     def keyboard_move_character(self, direction):
         print("=> event \"keyboard move direction\" {}".format(DIRECTIONS_STR[direction]))
-        # ...
+        self.socket_client.sendall("move".encode())
+        self.socket_client.send(pickle.dumps([self.nickname, direction]))
         return True
 
     def keyboard_drop_bomb(self):
         print("=> event \"keyboard drop bomb\"")
-        # ...
+        self.socket_client.sendall("bomb".encode())
+        self.socket_client.send(pickle.dumps([self.nickname]))
         return True
 
     # time event
